@@ -48,10 +48,28 @@ hooks/useSessionState the single interface every screen uses
 ```
 
 Screens never touch the log directly — they take props or call
-`useSessionState()`. `scratch/derive.test.ts` (gitignored) exercises the fold:
-`npx tsx scratch/derive.test.ts`.
+`useSessionState()`.
 
-`wordIndex` is **1-based**, matching the source API's `position` field.
+`wordIndex` is **1-based**, matching the source API's `position` field. In
+2:3 that makes word 4 وَيُقِيمُونَ, the word carrying the sample mark event in
+the brief.
+
+### Checks
+
+```bash
+npm test        # folds the log and validates the export
+npm run typecheck
+npm run lint
+npm run build
+```
+
+`tests/derive.test.ts` walks a full turn through the real reducer: a student
+joins, the teacher starts the turn, marks are added and removed, the range is
+narrowed mid-turn, the turn finishes. It asserts the two rules that are easy to
+get wrong — a removal *appends* rather than deletes, and marks that fall outside
+a narrowed range are kept — plus that the same log always folds to the same
+state. `tests/export.test.ts` checks the exported JSON parses and that a mark
+event carries every field the brief specifies.
 
 ## Quran text
 

@@ -7,20 +7,17 @@
  */
 
 import type { Participant } from "@/components/shell/MeetingShell";
-import { LIVE_STUDENT_ID, TEACHER_ID, TEACHER_NAME } from "./eventLog";
+import { TEACHER_ID, TEACHER_NAME } from "./eventLog";
 import type { QueueEntry } from "./state";
 
 export function buildParticipants({
   queue,
   activeStudentId,
   isOnBreak,
-  liveStudentPresent,
 }: {
   queue: readonly QueueEntry[];
   activeStudentId: string | null;
   isOnBreak: boolean;
-  /** False before the live student has joined — they get no tile yet. */
-  liveStudentPresent: boolean;
 }): Participant[] {
   const teacher: Participant = {
     id: TEACHER_ID,
@@ -29,19 +26,19 @@ export function buildParticipants({
     status: isOnBreak ? "On a break" : "Teaching",
   };
 
-  const students = queue
-    .filter((q) => liveStudentPresent || q.studentId !== LIVE_STUDENT_ID)
-    .map<Participant>((q) => ({
-      id: q.studentId,
-      name: q.name,
-      isReciting: q.studentId === activeStudentId,
-      status:
-        q.studentId === activeStudentId
-          ? "Reciting now"
-          : q.status === "done"
-            ? "Turn finished"
-            : "Waiting",
-    }));
+  // Queue membership is the gate: the live student gets a tile once they join
+  // and not before, which falls out of the queue itself.
+  const students = queue.map<Participant>((q) => ({
+    id: q.studentId,
+    name: q.name,
+    isReciting: q.studentId === activeStudentId,
+    status:
+      q.studentId === activeStudentId
+        ? "Reciting now"
+        : q.status === "done"
+          ? "Turn finished"
+          : "Waiting",
+  }));
 
   return [teacher, ...students];
 }
