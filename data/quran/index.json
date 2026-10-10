@@ -1,0 +1,319 @@
+{
+  "source": "Quran.com API v4 (text_uthmani)",
+  "sourceUrl": "https://api.quran.com/api/v4",
+  "fetchedAt": "2026-10-10T09:48:14.331Z",
+  "surahs": [
+    {
+      "surah": 1,
+      "nameSimple": "Al-Fatihah",
+      "nameArabic": "الفاتحة",
+      "ayahCount": 7,
+      "cachedFrom": 1,
+      "cachedTo": 7
+    },
+    {
+      "surah": 2,
+      "nameSimple": "Al-Baqarah",
+      "nameArabic": "البقرة",
+      "ayahCount": 286,
+      "cachedFrom": 1,
+      "cachedTo": 20
+    },
+    {
+      "surah": 78,
+      "nameSimple": "An-Naba",
+      "nameArabic": "النبإ",
+      "ayahCount": 40,
+      "cachedFrom": 1,
+      "cachedTo": 40
+    },
+    {
+      "surah": 79,
+      "nameSimple": "An-Nazi'at",
+      "nameArabic": "النازعات",
+      "ayahCount": 46,
+      "cachedFrom": 1,
+      "cachedTo": 46
+    },
+    {
+      "surah": 80,
+      "nameSimple": "'Abasa",
+      "nameArabic": "عبس",
+      "ayahCount": 42,
+      "cachedFrom": 1,
+      "cachedTo": 42
+    },
+    {
+      "surah": 81,
+      "nameSimple": "At-Takwir",
+      "nameArabic": "التكوير",
+      "ayahCount": 29,
+      "cachedFrom": 1,
+      "cachedTo": 29
+    },
+    {
+      "surah": 82,
+      "nameSimple": "Al-Infitar",
+      "nameArabic": "الإنفطار",
+      "ayahCount": 19,
+      "cachedFrom": 1,
+      "cachedTo": 19
+    },
+    {
+      "surah": 83,
+      "nameSimple": "Al-Mutaffifin",
+      "nameArabic": "المطففين",
+      "ayahCount": 36,
+      "cachedFrom": 1,
+      "cachedTo": 36
+    },
+    {
+      "surah": 84,
+      "nameSimple": "Al-Inshiqaq",
+      "nameArabic": "الإنشقاق",
+      "ayahCount": 25,
+      "cachedFrom": 1,
+      "cachedTo": 25
+    },
+    {
+      "surah": 85,
+      "nameSimple": "Al-Buruj",
+      "nameArabic": "البروج",
+      "ayahCount": 22,
+      "cachedFrom": 1,
+      "cachedTo": 22
+    },
+    {
+      "surah": 86,
+      "nameSimple": "At-Tariq",
+      "nameArabic": "الطارق",
+      "ayahCount": 17,
+      "cachedFrom": 1,
+      "cachedTo": 17
+    },
+    {
+      "surah": 87,
+      "nameSimple": "Al-A'la",
+      "nameArabic": "الأعلى",
+      "ayahCount": 19,
+      "cachedFrom": 1,
+      "cachedTo": 19
+    },
+    {
+      "surah": 88,
+      "nameSimple": "Al-Ghashiyah",
+      "nameArabic": "الغاشية",
+      "ayahCount": 26,
+      "cachedFrom": 1,
+      "cachedTo": 26
+    },
+    {
+      "surah": 89,
+      "nameSimple": "Al-Fajr",
+      "nameArabic": "الفجر",
+      "ayahCount": 30,
+      "cachedFrom": 1,
+      "cachedTo": 30
+    },
+    {
+      "surah": 90,
+      "nameSimple": "Al-Balad",
+      "nameArabic": "البلد",
+      "ayahCount": 20,
+      "cachedFrom": 1,
+      "cachedTo": 20
+    },
+    {
+      "surah": 91,
+      "nameSimple": "Ash-Shams",
+      "nameArabic": "الشمس",
+      "ayahCount": 15,
+      "cachedFrom": 1,
+      "cachedTo": 15
+    },
+    {
+      "surah": 92,
+      "nameSimple": "Al-Layl",
+      "nameArabic": "الليل",
+      "ayahCount": 21,
+      "cachedFrom": 1,
+      "cachedTo": 21
+    },
+    {
+      "surah": 93,
+      "nameSimple": "Ad-Duhaa",
+      "nameArabic": "الضحى",
+      "ayahCount": 11,
+      "cachedFrom": 1,
+      "cachedTo": 11
+    },
+    {
+      "surah": 94,
+      "nameSimple": "Ash-Sharh",
+      "nameArabic": "الشرح",
+      "ayahCount": 8,
+      "cachedFrom": 1,
+      "cachedTo": 8
+    },
+    {
+      "surah": 95,
+      "nameSimple": "At-Tin",
+      "nameArabic": "التين",
+      "ayahCount": 8,
+      "cachedFrom": 1,
+      "cachedTo": 8
+    },
+    {
+      "surah": 96,
+      "nameSimple": "Al-'Alaq",
+      "nameArabic": "العلق",
+      "ayahCount": 19,
+      "cachedFrom": 1,
+      "cachedTo": 19
+    },
+    {
+      "surah": 97,
+      "nameSimple": "Al-Qadr",
+      "nameArabic": "القدر",
+      "ayahCount": 5,
+      "cachedFrom": 1,
+      "cachedTo": 5
+    },
+    {
+      "surah": 98,
+      "nameSimple": "Al-Bayyinah",
+      "nameArabic": "البينة",
+      "ayahCount": 8,
+      "cachedFrom": 1,
+      "cachedTo": 8
+    },
+    {
+      "surah": 99,
+      "nameSimple": "Az-Zalzalah",
+      "nameArabic": "الزلزلة",
+      "ayahCount": 8,
+      "cachedFrom": 1,
+      "cachedTo": 8
+    },
+    {
+      "surah": 100,
+      "nameSimple": "Al-'Adiyat",
+      "nameArabic": "العاديات",
+      "ayahCount": 11,
+      "cachedFrom": 1,
+      "cachedTo": 11
+    },
+    {
+      "surah": 101,
+      "nameSimple": "Al-Qari'ah",
+      "nameArabic": "القارعة",
+      "ayahCount": 11,
+      "cachedFrom": 1,
+      "cachedTo": 11
+    },
+    {
+      "surah": 102,
+      "nameSimple": "At-Takathur",
+      "nameArabic": "التكاثر",
+      "ayahCount": 8,
+      "cachedFrom": 1,
+      "cachedTo": 8
+    },
+    {
+      "surah": 103,
+      "nameSimple": "Al-'Asr",
+      "nameArabic": "العصر",
+      "ayahCount": 3,
+      "cachedFrom": 1,
+      "cachedTo": 3
+    },
+    {
+      "surah": 104,
+      "nameSimple": "Al-Humazah",
+      "nameArabic": "الهمزة",
+      "ayahCount": 9,
+      "cachedFrom": 1,
+      "cachedTo": 9
+    },
+    {
+      "surah": 105,
+      "nameSimple": "Al-Fil",
+      "nameArabic": "الفيل",
+      "ayahCount": 5,
+      "cachedFrom": 1,
+      "cachedTo": 5
+    },
+    {
+      "surah": 106,
+      "nameSimple": "Quraysh",
+      "nameArabic": "قريش",
+      "ayahCount": 4,
+      "cachedFrom": 1,
+      "cachedTo": 4
+    },
+    {
+      "surah": 107,
+      "nameSimple": "Al-Ma'un",
+      "nameArabic": "الماعون",
+      "ayahCount": 7,
+      "cachedFrom": 1,
+      "cachedTo": 7
+    },
+    {
+      "surah": 108,
+      "nameSimple": "Al-Kawthar",
+      "nameArabic": "الكوثر",
+      "ayahCount": 3,
+      "cachedFrom": 1,
+      "cachedTo": 3
+    },
+    {
+      "surah": 109,
+      "nameSimple": "Al-Kafirun",
+      "nameArabic": "الكافرون",
+      "ayahCount": 6,
+      "cachedFrom": 1,
+      "cachedTo": 6
+    },
+    {
+      "surah": 110,
+      "nameSimple": "An-Nasr",
+      "nameArabic": "النصر",
+      "ayahCount": 3,
+      "cachedFrom": 1,
+      "cachedTo": 3
+    },
+    {
+      "surah": 111,
+      "nameSimple": "Al-Masad",
+      "nameArabic": "المسد",
+      "ayahCount": 5,
+      "cachedFrom": 1,
+      "cachedTo": 5
+    },
+    {
+      "surah": 112,
+      "nameSimple": "Al-Ikhlas",
+      "nameArabic": "الإخلاص",
+      "ayahCount": 4,
+      "cachedFrom": 1,
+      "cachedTo": 4
+    },
+    {
+      "surah": 113,
+      "nameSimple": "Al-Falaq",
+      "nameArabic": "الفلق",
+      "ayahCount": 5,
+      "cachedFrom": 1,
+      "cachedTo": 5
+    },
+    {
+      "surah": 114,
+      "nameSimple": "An-Nas",
+      "nameArabic": "الناس",
+      "ayahCount": 6,
+      "cachedFrom": 1,
+      "cachedTo": 6
+    }
+  ]
+}

@@ -1,0 +1,37 @@
+{
+  "surah": 108,
+  "nameSimple": "Al-Kawthar",
+  "nameArabic": "الكوثر",
+  "ayahCount": 3,
+  "cachedFrom": 1,
+  "cachedTo": 3,
+  "source": "Quran.com API v4 (text_uthmani)",
+  "fetchedAt": "2026-10-10T09:48:09.960Z",
+  "ayahs": [
+    {
+      "ayah": 1,
+      "words": [
+        "إِنَّآ",
+        "أَعْطَيْنَـٰكَ",
+        "ٱلْكَوْثَرَ"
+      ]
+    },
+    {
+      "ayah": 2,
+      "words": [
+        "فَصَلِّ",
+        "لِرَبِّكَ",
+        "وَٱنْحَرْ"
+      ]
+    },
+    {
+      "ayah": 3,
+      "words": [
+        "إِنَّ",
+        "شَانِئَكَ",
+        "هُوَ",
+        "ٱلْأَبْتَرُ"
+      ]
+    }
+  ]
+}
