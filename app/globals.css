@@ -1,26 +1,105 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
+/* ---------------------------------------------------------------------------
+   Palette sampled from reference/ — the two HTML mockups for surfaces and
+   accents, the screenshots for the overall weight of the dark theme.
+   Mistake-type hues are fixed by the teacher mockup's legend and must not be
+   re-chosen: the colour IS the label.
+   --------------------------------------------------------------------------- */
+@theme {
+  --color-ink: #0d1411;
+  --color-surface: #16211c;
+  --color-surface-2: #13201b;
+  --color-sheet: #172420;
+  --color-field: #0f1a16;
+  --color-line: #233029;
+  --color-line-strong: #30423a;
+
+  --color-fg: #e8f0ec;
+  --color-muted: #9fb3aa;
+  --color-dim: #7d918a;
+  --color-faint: #4f635b;
+
+  --color-green: #2f6b57;
+  --color-green-bright: #86c9b0;
+  --color-green-glow: #aef0d6;
+  --color-amber: #f0a24a;
+  --color-danger: #e24b4a;
+  --color-danger-soft: #f09595;
+
+  --color-m-tajwid: #ef9f27;
+  --color-m-makhraj: #d85a30;
+  --color-m-harakah: #378add;
+  --color-m-missed: #7f77dd;
+  --color-m-extra: #1d9e75;
+  --color-m-hesitation: #b4b2a9;
+
+  --font-sans: var(--font-plex), ui-sans-serif, system-ui, -apple-system, sans-serif;
+  --font-arabic: var(--font-amiri), "Amiri", "Traditional Arabic", serif;
+
+  --radius-card: 14px;
+  --radius-field: 12px;
+  --radius-tile: 16px;
+  --radius-phone: 34px;
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+html {
+  background: #07100d;
+  color-scheme: dark;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background: #07100d;
+  color: var(--color-fg);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+}
+
+/* One visible focus treatment everywhere, on the dark ground. */
+:focus-visible {
+  outline: 2px solid var(--color-green-bright);
+  outline-offset: 2px;
+  border-radius: 6px;
+}
+
+button {
+  cursor: pointer;
+}
+
+button:disabled {
+  cursor: not-allowed;
+}
+
+/* Arabic needs room to breathe; the mockups set 1.9–2.25 line-height. */
+.arabic {
+  font-family: var(--font-arabic);
+  direction: rtl;
+  text-align: right;
+}
+
+/* Hide scrollbars on the in-frame scroll areas without disabling scrolling. */
+.scroll-area {
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-line-strong) transparent;
+}
+
+.scroll-area::-webkit-scrollbar {
+  width: 6px;
+}
+
+.scroll-area::-webkit-scrollbar-thumb {
+  background: var(--color-line-strong);
+  border-radius: 999px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
 }
