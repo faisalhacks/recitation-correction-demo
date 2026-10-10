@@ -40,3 +40,16 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 
+# reference material — screenshots of another product, kept locally only.
+# Never commit: they carry real names and another app's branding.
+/reference
+
+# local tool and editor settings
+.claude/settings.local.json
+.idea/
+.vscode/
+*.swp
+
+# os
+Thumbs.db
+
