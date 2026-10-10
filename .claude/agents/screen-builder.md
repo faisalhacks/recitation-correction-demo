@@ -16,7 +16,16 @@ These hold the core sync logic, written and frozen by the main session:
 - `lib/state.ts`
 - `hooks/useSessionState.ts`
 
-Read them to understand the data; never edit them. If your screen needs something the hook does not expose, **stop and report what is missing** — the main session extends the hook. Never work around a gap by reaching into the event log, duplicating derivation logic, or keeping a parallel copy of state.
+Read them to understand the data; never edit them.
+
+You **may** import types and label constants from `lib/eventLog.ts` — `AyahRange`,
+`RecitationType`, `MistakeType`, `MISTAKE_TYPES`, `MISTAKE_META`, `RECITATION_META`.
+Those are shared vocabulary; re-declaring them locally would let the UI drift
+from the log.
+
+You must **never** call its functions — `appendEvents`, `loadLog`, `replaceLog`,
+`subscribe`, `makeEvent` — and must never import `lib/state.ts` at all. Reads and
+writes go through props or `useSessionState()`, with no exceptions. If your screen needs something the hook does not expose, **stop and report what is missing** — the main session extends the hook. Never work around a gap by reaching into the event log, duplicating derivation logic, or keeping a parallel copy of state.
 
 Also do not modify: `lib/quran.ts`, `lib/seed.ts`, `data/quran/*`, `app/globals.css`, `app/layout.tsx`, or any file under `components/ui/`, `components/shell/` or `components/quran/` unless your dispatch explicitly assigns it to you. Those are shared primitives — other agents are building against them at the same time, so changing one breaks their work.
 
