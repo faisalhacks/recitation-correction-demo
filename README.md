@@ -1,36 +1,86 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Recitation Correction — concept demo
 
-## Getting Started
+A working demo of one feature: in a group halaqah, a student picks the ayahs
+they will recite, the teacher marks mistakes word by word while they recite,
+and the student gets a summary when their turn ends.
 
-First, run the development server:
+**Unofficial concept demo. Not affiliated with any organisation.**
+
+## Running it
 
 ```bash
+npm install
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Then open <http://localhost:3000>.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+The demo is built for **two tabs**. Open one as Student and one as Teacher;
+they sync through `BroadcastChannel`, so an action in one appears in the other
+immediately.
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+### The click path
 
-## Learn More
+1. **Tab 1 → Join as Student.** Pick a surah and an ayah range, choose Sabaq,
+   and join. You land in the meeting, waiting your turn.
+2. **Tab 2 → Join as Teacher.** Your student is in the participants panel with
+   the range they chose. Tap them to start their turn.
+3. Tab 1 switches to "reciting now". The teacher's marks are deliberately
+   hidden from the student until the turn ends.
+4. **Tab 2:** tap words to mark mistakes. Pick a type, add a note, save.
+5. **Tab 2 → Finish turn.** Tab 1 opens the summary automatically.
+6. **Progress** reflects the saved turns. **Audit log** shows the raw events and
+   exports them as JSON.
 
-To learn more about Next.js, take a look at the following resources:
+## How it works
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+Everything is derived from an **append-only event log** kept in `localStorage`.
+Nothing is ever mutated or deleted: removing a mark appends a second event with
+`"action": "remove"`, and the current state is folded out of the log on every
+render. That is what makes the log usable later as labeled training data.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+```
+lib/eventLog.ts       event types, persistence, cross-tab sync
+lib/state.ts          folds the log into the current state
+lib/seed.ts           the starting log (3 waiting students + sample history)
+lib/quran.ts          read-only access to the cached Uthmani text
+hooks/useSessionState the single interface every screen uses
+```
 
-## Deploy on Vercel
+Screens never touch the log directly — they take props or call
+`useSessionState()`. `scratch/derive.test.ts` (gitignored) exercises the fold:
+`npx tsx scratch/derive.test.ts`.
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+`wordIndex` is **1-based**, matching the source API's `position` field.
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## Quran text
+
+Word-by-word Uthmani text is fetched from the
+[Quran.com API v4](https://api.quran.com/api/v4) by `scripts/fetch-quran.mjs`
+and cached in `data/quran/`: Al-Fatihah, Al-Baqarah 1–20, and Juz Amma
+(78–114) — 591 ayahs, 2,567 words. No Arabic text is typed or generated
+anywhere in this repo.
+
+To refresh the cache:
+
+```bash
+node scripts/fetch-quran.mjs
+```
+
+## What this demo is and isn't
+
+It **is** a working demo of the marking flow, designed to sit on top of an
+existing live session, storing corrections as an append-only log that could
+later serve as labeled data.
+
+It is **not** automatic mistake detection, real-time AI, or an integration with
+any app. There is no audio, no video, and no recording — the meeting screen is
+an honest placeholder, and every control either works or says why it can't.
+
+All names are placeholders ("Student A", "Ustadh Demo"). No logos or imagery
+from any existing product are used.
+
+## Deploying
+
+Deploys to Vercel with no configuration. All state is client-side, so there is
+nothing to provision.
