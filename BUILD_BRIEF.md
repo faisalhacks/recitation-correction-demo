@@ -25,7 +25,12 @@ Folder `./reference` holds the current product and the proposed feature.
 There is no existing code, backend, data model or repo; this build starts
 from zero.
 
-### 2a. Six screenshots of the existing app ("Muqra")
+> **Not in this repository.** `reference/` is gitignored and kept locally
+> only. It contains screenshots of another team's product, including real
+> names and their branding, which are not ours to publish. The sections
+> below describe that material; nothing in the shipped code depends on it.
+
+### 2a. Six screenshots of the existing app
 
 Android, dark theme, teal/green Islamic-geometric branding.
 

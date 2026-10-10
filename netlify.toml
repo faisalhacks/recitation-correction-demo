@@ -1,0 +1,17 @@
+# Netlify deployment for a Next.js 16 App Router project.
+#
+# The Next.js runtime plugin is what makes `.next` servable on Netlify; naming
+# it here means Netlify installs it automatically, so the site needs no
+# manual plugin setup in the dashboard.
+
+[build]
+  command = "npm run build"
+  publish = ".next"
+
+[build.environment]
+  # Next 16 requires Node 20.9+. Pinned so a change to Netlify's default
+  # can't move the build out from under the project.
+  NODE_VERSION = "22"
+
+[[plugins]]
+  package = "@netlify/plugin-nextjs"

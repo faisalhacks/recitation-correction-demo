@@ -4,7 +4,13 @@ A working demo of one feature: in a group halaqah, a student picks the ayahs
 they will recite, the teacher marks mistakes word by word while they recite,
 and the student gets a summary when their turn ends.
 
-**Unofficial concept demo. Not affiliated with any organisation.**
+**Concept demo – not affiliated with any organisation.**
+
+It exists to make one argument concrete: a live session already has a teacher
+listening closely: if their corrections are captured as structured, per-word
+data instead of being lost when the call ends, that data can fill a progress
+screen, show a student exactly what to fix, and later serve as a labeled
+training set.
 
 ## Running it
 
@@ -15,9 +21,12 @@ npm run dev
 
 Then open <http://localhost:3000>.
 
-The demo is built for **two tabs**. Open one as Student and one as Teacher;
-they sync through `BroadcastChannel`, so an action in one appears in the other
-immediately.
+The demo is built for **two tabs in the same browser** — open one as Student
+and one as Teacher. They sync through `BroadcastChannel` and `localStorage`,
+which are scoped to a single browser profile and origin, so an action in one
+tab appears in the other immediately. Two different browsers, a private
+window, or two devices will each keep their own separate state and will not
+see each other.
 
 ### The click path
 
@@ -46,6 +55,40 @@ lib/seed.ts           the starting log (3 waiting students + sample history)
 lib/quran.ts          read-only access to the cached Uthmani text
 hooks/useSessionState the single interface every screen uses
 ```
+
+### Event format
+
+Every event shares an envelope — `id`, `kind`, `sessionId`, `studentId`,
+`teacherId`, `timestamp` — and adds its own fields. A mark:
+
+```json
+{
+  "id": "evt_0mv297mtp_000003_m2wdb",
+  "kind": "mark",
+  "sessionId": "sess_01",
+  "studentId": "student_a",
+  "surah": 2,
+  "ayah": 3,
+  "wordIndex": 4,
+  "type": "tajwid",
+  "note": "Ghunnah held too short",
+  "teacherId": "ustadh_demo",
+  "timestamp": "2026-10-10T10:31:07.597Z",
+  "action": "add"
+}
+```
+
+`type` is one of `tajwid`, `makhraj`, `harakah`, `missed`, `extra`,
+`hesitation`. `wordIndex` is 1-based.
+
+The other kinds are `queue_join` (`name`, `range`, `recType`), `range_change`
+(`range`, `by`), `turn_start`, `turn_finish`, and `break` (`on`).
+
+**Nothing is ever mutated or deleted.** Un-marking a word appends a second
+mark event with `"action": "remove"`; a turn is the span between a
+`turn_start` and its `turn_finish`; a mark belongs to whichever turn was open
+when it was written. Replaying the log in timestamp order reproduces the state
+exactly, which is what makes the export usable as labeled data.
 
 Screens never touch the log directly — they take props or call
 `useSessionState()`.
