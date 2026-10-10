@@ -259,7 +259,7 @@ function publish(message: Message): void {
  * BroadcastChannel carries the events directly; the `storage` event is a
  * fallback for browsers without it, and re-reads from localStorage.
  */
-export function subscribe(onChange: (events: DemoEvent[]) => void): () => void {
+function subscribeRaw(onChange: (events: DemoEvent[]) => void): () => void {
   if (!isBrowser()) return () => {};
 
   const ch = getChannel();
@@ -289,17 +289,63 @@ export function subscribe(onChange: (events: DemoEvent[]) => void): () => void {
 }
 
 /* -------------------------------------------------------------------------- */
-/* writes                                                                      */
+/* the store                                                                   */
 /* -------------------------------------------------------------------------- */
 
 /**
- * Append events, persist, and tell the other tabs. Returns the full log so the
- * caller can set state without a second read.
+ * A `useSyncExternalStore`-shaped view of the log.
+ *
+ * The snapshot is cached at module scope and only replaced when the log
+ * actually changes, so React can compare it by reference. `getServerSnapshot`
+ * returns a frozen empty array: the server cannot see localStorage, and
+ * returning the same reference every time is what keeps hydration stable.
  */
+
+// One shared instance: referential stability is what React compares, so this
+// must never be rebuilt per call.
+const EMPTY_LOG: DemoEvent[] = [];
+
+let snapshot: DemoEvent[] = EMPTY_LOG;
+let hydrated = false;
+const listeners = new Set<() => void>();
+
+function setSnapshot(next: DemoEvent[]): void {
+  snapshot = next;
+  hydrated = true;
+  for (const listener of listeners) listener();
+}
+
+export function getSnapshot(): DemoEvent[] {
+  if (!hydrated) {
+    snapshot = loadLog();
+    hydrated = true;
+  }
+  return snapshot;
+}
+
+export function getServerSnapshot(): DemoEvent[] {
+  return EMPTY_LOG;
+}
+
+export function subscribeStore(onStoreChange: () => void): () => void {
+  listeners.add(onStoreChange);
+  const stopCrossTab = subscribeRaw((events) => setSnapshot(events));
+  return () => {
+    listeners.delete(onStoreChange);
+    stopCrossTab();
+  };
+}
+
+/* -------------------------------------------------------------------------- */
+/* writes                                                                      */
+/* -------------------------------------------------------------------------- */
+
+/** Append events, persist, update the snapshot, and tell the other tabs. */
 export function appendEvents(incoming: DemoEvent[]): DemoEvent[] {
-  if (incoming.length === 0) return loadLog();
-  const next = mergeEvents(loadLog(), incoming);
+  if (incoming.length === 0) return getSnapshot();
+  const next = mergeEvents(getSnapshot(), incoming);
   writeLog(next);
+  setSnapshot(next);
   publish({ type: "append", events: incoming });
   return next;
 }
@@ -308,6 +354,7 @@ export function appendEvents(incoming: DemoEvent[]): DemoEvent[] {
 export function replaceLog(events: DemoEvent[]): DemoEvent[] {
   const next = sortEvents(events);
   writeLog(next);
+  setSnapshot(next);
   publish({ type: "replace", events: next });
   return next;
 }

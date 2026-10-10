@@ -14,10 +14,7 @@ export function useElapsed(startedAt: string | null): number {
   const [seconds, setSeconds] = useState(0);
 
   useEffect(() => {
-    if (!startedAt) {
-      setSeconds(0);
-      return;
-    }
+    if (!startedAt) return;
     const start = new Date(startedAt).getTime();
     const tick = () =>
       setSeconds(Math.max(0, Math.floor((Date.now() - start) / 1000)));
@@ -26,7 +23,9 @@ export function useElapsed(startedAt: string | null): number {
     return () => window.clearInterval(id);
   }, [startedAt]);
 
-  return seconds;
+  // Derived rather than reset in the effect: with no start time there is no
+  // elapsed time, and saying so here keeps the effect to one job.
+  return startedAt ? seconds : 0;
 }
 
 /** 185 -> "03:05", 3725 -> "1:02:05". */

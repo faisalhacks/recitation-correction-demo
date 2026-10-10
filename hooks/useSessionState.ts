@@ -13,7 +13,12 @@
  * derived values before mount would cause a hydration mismatch.
  */
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useSyncExternalStore,
+} from "react";
 
 import {
   type AyahRange,
@@ -25,10 +30,11 @@ import {
   TEACHER_ID,
   appendEvents,
   buildExport,
-  loadLog,
+  getServerSnapshot,
+  getSnapshot,
   makeEvent,
   replaceLog,
-  subscribe,
+  subscribeStore,
 } from "@/lib/eventLog";
 import {
   type CompletedTurn,
@@ -112,16 +118,28 @@ const EMPTY: DerivedState = {
   completedTurns: [],
 };
 
-export function useSessionState(role: Role): SessionState {
-  const [events, setEvents] = useState<DemoEvent[]>([]);
-  const [ready, setReady] = useState(false);
+/** Stable snapshots for the mounted flag — see `ready` below. */
+const alwaysTrue = () => true;
+const alwaysFalse = () => false;
+const noopSubscribe = () => () => {};
 
-  // First client-side read, plus seeding on a cold start.
+export function useSessionState(role: Role): SessionState {
+  // The log lives outside React (localStorage plus a BroadcastChannel), which
+  // is exactly what useSyncExternalStore is for: it handles the server/client
+  // split without an effect that sets state during hydration.
+  const events = useSyncExternalStore(
+    subscribeStore,
+    getSnapshot,
+    getServerSnapshot,
+  );
+
+  const ready = useSyncExternalStore(noopSubscribe, alwaysTrue, alwaysFalse);
+
+  // Seeding is a write to the store, not to React state — appending notifies
+  // every subscriber, so this re-renders through the same path as any other
+  // change.
   useEffect(() => {
-    const existing = loadLog();
-    setEvents(existing.length ? existing : appendEvents(buildSeedEvents()));
-    setReady(true);
-    return subscribe(setEvents);
+    if (getSnapshot().length === 0) appendEvents(buildSeedEvents());
   }, []);
 
   const derived = useMemo(
@@ -130,7 +148,7 @@ export function useSessionState(role: Role): SessionState {
   );
 
   const commit = useCallback((drafts: DemoEvent[]) => {
-    setEvents(appendEvents(drafts));
+    appendEvents(drafts);
   }, []);
 
   /* --- actions ------------------------------------------------------------ */
@@ -228,7 +246,7 @@ export function useSessionState(role: Role): SessionState {
   );
 
   const resetDemo = useCallback(() => {
-    setEvents(replaceLog(buildSeedEvents()));
+    replaceLog(buildSeedEvents());
   }, []);
 
   const exportJSON = useCallback(() => {
