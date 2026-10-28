@@ -51,7 +51,7 @@ html {
 body {
   background: #07100d;
   color: var(--color-fg);
-  font-family: var(--font-sans);
+  font-family: var(--font-chrome);
   -webkit-font-smoothing: antialiased;
 }
 
@@ -102,4 +102,62 @@ button:disabled {
     transition-duration: 0.01ms !important;
     scroll-behavior: auto !important;
   }
+}
+
+/* ---------------------------------------------------------------------------
+   The meeting layer's palette — a second, deliberately separate system.
+
+   The halaqah tool runs on top of someone else's video call, so the two look
+   like what they are: the chrome below is Jitsi's neutral near-black and blue,
+   sampled from screenshots of the real client; the correction UI above it keeps
+   the green tokens declared earlier in this file. Nothing is shared between
+   them, and that is the point — a green "mute" button would imply the halaqah
+   demo owns a control it does not own.
+
+   Namespaced `jitsi-*` so none of these shadow Tailwind's own built-in scales:
+   a bare `--color-blue` would silently replace blue-500 everywhere in the app.
+   --------------------------------------------------------------------------- */
+@theme {
+  --color-jitsi-ink: #000000;
+  --color-jitsi-bar: #1c1c1e;
+  --color-jitsi-tile: #2b2c30;
+  --color-jitsi-sheet: #232328;
+  --color-jitsi-field: #3a3a3c;
+  --color-jitsi-field-off: #48484a;
+  --color-jitsi-divider: #3a3a3c;
+
+  --color-jitsi-fg: #ffffff;
+  --color-jitsi-muted: #9b9ba1;
+  --color-jitsi-off: #6e6e73;
+
+  --color-jitsi-blue: #2b6ef2;
+  --color-jitsi-speaking: #2fa84f;
+
+  --color-jitsi-purple: #5b4da6;
+  --color-jitsi-pink: #b23a86;
+  --color-jitsi-slate: #4a4a4e;
+
+  --radius-jitsi-tile: 8px;
+  --radius-jitsi-sheet: 14px;
+  --radius-jitsi-field: 10px;
+  --radius-jitsi-btn: 8px;
+
+  --font-chrome: var(--font-noto-arabic), var(--font-plex), ui-sans-serif, system-ui, sans-serif;
+}
+
+/* The name strip on a tile and the scrim behind a sheet are both "black at a
+   fraction" rather than flat greys — they sit over video in the real client. */
+.jitsi-badge {
+  background: rgba(0, 0, 0, 0.7);
+}
+
+.jitsi-scrim {
+  background: rgba(0, 0, 0, 0.55);
+}
+
+/* Call timers and speaking times are read as quantities, not prose: hold the
+   digits on a fixed advance so they stop jittering as the seconds tick over. */
+.tnum {
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum" 1;
 }

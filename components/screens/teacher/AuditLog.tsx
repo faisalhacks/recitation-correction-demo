@@ -12,23 +12,32 @@
  */
 
 import type { DemoEvent } from "@/lib/eventLog";
-import { MISTAKE_META, RECITATION_META } from "@/lib/eventLog";
+import { MISTAKE_META, RECITATION_META, TEACHER_NAME } from "@/lib/eventLog";
 import { formatRangeShort } from "@/lib/quran";
 import { Button, Card, Chip, Dot, EmptyState } from "@/components/ui/primitives";
+import { t } from "@/lib/i18n";
 
+// Local rather than part of the `t` table: these name internal log *event
+// kinds* (the discriminator on DemoEvent), not product copy, so they don't
+// belong in the shared string table.
 const KIND_LABEL: Record<DemoEvent["kind"], string> = {
-  mark: "Mark",
-  queue_join: "Queue join",
-  range_change: "Range change",
-  turn_start: "Turn start",
-  turn_finish: "Turn finish",
-  break: "Break",
+  mark: "ملاحظة",
+  queue_join: "انضمام إلى الطابور",
+  range_change: "تغيير النطاق",
+  turn_start: "بداية الدور",
+  turn_finish: "نهاية الدور",
+  break: "استراحة",
+  chat: "رسالة",
+  mic: "الميكروفون",
+  leave: "مغادرة",
 };
 
 function formatTime(iso: string): string {
   const d = new Date(iso);
   if (Number.isNaN(d.getTime())) return iso;
-  return d.toLocaleTimeString(undefined, {
+  // "ar-u-nu-latn" pins Western digits — a bare "ar" locale would silently
+  // switch to Arabic-Indic numerals, which this chrome never uses.
+  return d.toLocaleTimeString("ar-u-nu-latn", {
     hour: "2-digit",
     minute: "2-digit",
     second: "2-digit",
@@ -50,8 +59,10 @@ function EventRow({ event }: { event: DemoEvent }) {
         <Chip tone={removed ? "danger" : "neutral"}>
           {KIND_LABEL[event.kind]}
         </Chip>
+        {/* A clock reading is a Latin/numeric run; isolate it from the Arabic around it. */}
         <time
           dateTime={event.timestamp}
+          dir="ltr"
           className="font-mono text-[11px] text-dim shrink-0"
         >
           {formatTime(event.timestamp)}
@@ -78,16 +89,18 @@ function EventDetails({ event }: { event: DemoEvent }) {
             {meta.label}
           </span>
           <span
+            dir="ltr"
             className={`font-mono text-[12px] ${removed ? "line-through text-danger-soft" : "text-fg"}`}
           >
             {event.surah}:{event.ayah}:{event.wordIndex}
           </span>
           <Chip tone={removed ? "danger" : "green"}>
-            {removed ? "Removed" : "Added"}
+            {removed ? t.audit.removedChip : t.audit.addedChip}
           </Chip>
           {event.note ? (
             <span className="text-[12px] text-dim break-words min-w-0 basis-full">
-              “{event.note}”
+              {/* Teacher-typed free text — script unknown, isolate it. */}
+              “<bdi>{event.note}</bdi>”
             </span>
           ) : null}
         </div>
@@ -97,11 +110,11 @@ function EventDetails({ event }: { event: DemoEvent }) {
     case "range_change":
       return (
         <div className="flex flex-wrap items-center gap-2 text-[13px] text-fg min-w-0">
-          <span className="font-mono">
+          <span dir="ltr" className="font-mono">
             {formatRangeShort(event.range.surah, event.range.from, event.range.to)}
           </span>
           <span className="text-dim">
-            changed by {event.by === "teacher" ? "Ustadh Demo" : "the student"}
+            {t.audit.changedBy(event.by === "teacher" ? TEACHER_NAME : t.audit.theStudent)}
           </span>
         </div>
       );
@@ -110,8 +123,9 @@ function EventDetails({ event }: { event: DemoEvent }) {
     case "turn_finish":
       return (
         <div className="flex flex-wrap items-center gap-2 text-[13px] text-fg min-w-0">
-          <span className="text-dim">Student</span>
-          <span className="font-mono break-all">{event.studentId}</span>
+          <span className="text-dim">{t.audit.theStudent}</span>
+          {/* An internal id, not Arabic text — isolate it. */}
+          <span dir="ltr" className="font-mono break-all">{event.studentId}</span>
         </div>
       );
 
@@ -119,7 +133,7 @@ function EventDetails({ event }: { event: DemoEvent }) {
       return (
         <div className="flex flex-wrap items-center gap-2 text-[13px] text-fg">
           <Chip tone={event.on ? "amber" : "neutral"}>
-            {event.on ? "Break on" : "Break off"}
+            {event.on ? t.audit.breakOnChip : t.audit.breakOffChip}
           </Chip>
         </div>
       );
@@ -127,8 +141,9 @@ function EventDetails({ event }: { event: DemoEvent }) {
     case "queue_join":
       return (
         <div className="flex flex-wrap items-center gap-2 text-[13px] text-fg min-w-0">
-          <span className="truncate">{event.name}</span>
-          <span className="font-mono">
+          {/* Student-entered name — isolate it, script unknown. */}
+          <bdi className="truncate">{event.name}</bdi>
+          <span dir="ltr" className="font-mono">
             {formatRangeShort(event.range.surah, event.range.from, event.range.to)}
           </span>
           <Chip>{RECITATION_META[event.recType].label}</Chip>
@@ -160,20 +175,18 @@ export function AuditLog({
         <button
           type="button"
           onClick={onBack}
-          aria-label="Back"
-          className="text-[22px] text-fg leading-none px-1 -ml-1 rounded-field"
+          aria-label={t.audit.backAria}
+          className="text-[22px] text-fg leading-none px-1 -ms-1 rounded-field"
         >
-          ‹
+          {/* Back-navigation chevron: directional, so it mirrors under RTL. */}
+          ›
         </button>
-        <span className="text-base font-medium flex-1">Audit log</span>
-        <Chip>{events.length} events</Chip>
+        <span className="text-base font-medium flex-1">{t.audit.title}</span>
+        <Chip>{t.audit.eventsCount(events.length)}</Chip>
       </div>
 
       <p className="px-4 pb-3 text-[13px] text-dim leading-relaxed shrink-0">
-        This is the raw, append-only record of the session — nothing is ever
-        deleted. Removing a mark adds a new “remove” event rather than erasing
-        the original; the current state you see elsewhere is just this log
-        replayed in order.
+        {t.audit.description}
       </p>
 
       <div className="flex-1 overflow-y-auto scroll-area px-4 pb-4 min-h-0">
@@ -184,16 +197,15 @@ export function AuditLog({
             ))}
           </ul>
         ) : (
-          <EmptyState title="No events yet">
-            Actions the teacher takes during the session will appear here as
-            they happen.
+          <EmptyState title={t.audit.noEventsTitle}>
+            {t.audit.noEventsBody}
           </EmptyState>
         )}
       </div>
 
       <div className="px-4 pb-4 pt-1 shrink-0">
         <Button full onClick={onExport}>
-          Export labeled data
+          {t.audit.exportLabeledData}
         </Button>
       </div>
     </div>

@@ -1,31 +1,37 @@
 "use client";
 
 /**
- * Student's view inside the simulated meeting (BUILD_BRIEF.md §18).
+ * Student's view inside the meeting (BUILD_BRIEF.md §18).
  *
  * Two states: waiting in the queue (range still editable, break banner) and
- * reciting (ayahs shown, no marks — the student only sees the teacher's
- * marks once the turn ends, per §4 "Mark visibility" and §10).
+ * reciting (ayahs shown, no marks — the student only sees the teacher's marks
+ * once the turn ends, per §4 "Mark visibility" and §10).
+ *
+ * This is the green panel that rides on top of the call. The meeting chrome
+ * around it belongs to the other layer and is not restyled here.
  */
 
+import type { ChatMessage } from "@/lib/state";
 import type { AyahRange, RecitationType } from "@/lib/eventLog";
-import type { Participant } from "@/components/shell/MeetingShell";
-import { MeetingShell } from "@/components/shell/MeetingShell";
+import type { MeetingPerson } from "@/components/meeting/chrome";
+import { MeetingShell } from "@/components/meeting/MeetingShell";
 import { AyahText } from "@/components/quran/AyahText";
 import { Button, Card, Chip } from "@/components/ui/primitives";
 import { RECITATION_META } from "@/lib/eventLog";
+import { t } from "@/lib/i18n";
 import { formatRange } from "@/lib/quran";
-
-function ordinal(n: number): string {
-  const s = ["th", "st", "nd", "rd"];
-  const v = n % 100;
-  return `${n}${s[(v - 20) % 10] ?? s[v] ?? s[0]}`;
-}
 
 export function StudentMeeting({
   participants,
   speakerId,
   startedAt,
+  meId,
+  micOpen,
+  onToggleMic,
+  chat,
+  onSendChat,
+  leftIds,
+  onLeave,
   range,
   recType,
   position,
@@ -34,9 +40,16 @@ export function StudentMeeting({
   onEditRange,
   onOpenProgress,
 }: {
-  participants: Participant[];
+  participants: MeetingPerson[];
   speakerId: string | null;
   startedAt: string | null;
+  meId: string;
+  micOpen: boolean;
+  onToggleMic: () => void;
+  chat: readonly ChatMessage[];
+  onSendChat: (text: string) => void;
+  leftIds: readonly string[];
+  onLeave: () => void;
   range: AyahRange;
   recType: RecitationType;
   /** 1-based place in the waiting line, or null when not waiting. */
@@ -46,25 +59,25 @@ export function StudentMeeting({
   onEditRange: () => void;
   onOpenProgress: () => void;
 }) {
-  const controls = (
-    <Button variant="secondary" onClick={onOpenProgress}>
-      Progress
-    </Button>
-  );
-
   return (
     <MeetingShell
-      participants={participants}
+      people={participants}
       speakerId={speakerId}
       startedAt={startedAt}
-      controls={controls}
+      meId={meId}
+      micOpen={micOpen}
+      onToggleMic={onToggleMic}
+      chat={chat}
+      onSendChat={onSendChat}
+      leftIds={leftIds}
+      onLeave={onLeave}
     >
       <div className="px-4 py-4 flex flex-col gap-3">
         {amReciting ? (
           <>
             <Card className="px-4 py-3">
               <p className="text-[15px] font-medium text-green-bright">
-                Reciting now
+                {t.queue.recitingNowTitle}
               </p>
               <p className="text-xs text-dim mt-0.5">
                 {formatRange(range.surah, range.from, range.to)} ·{" "}
@@ -77,33 +90,40 @@ export function StudentMeeting({
                   see the teacher's marks while reciting, so no `marks` and no
                   `onWordTap` are passed here — marks only appear in the
                   summary after the turn ends. */}
-              <AyahText surah={range.surah} from={range.from} to={range.to} marks={[]} />
+              <AyahText
+                surah={range.surah}
+                from={range.from}
+                to={range.to}
+                marks={[]}
+              />
             </Card>
 
             <p className="text-xs text-dim text-center px-2">
-              You&apos;ll see the teacher&apos;s notes when your turn ends.
+              {t.queue.willSeeNotesLater}
             </p>
           </>
         ) : (
           <>
             <Card className="px-4 py-3">
               <p className="text-[15px] font-medium text-fg">
-                Waiting for your turn
+                {t.queue.waitingTitle}
               </p>
               <p className="text-xs text-dim mt-0.5">
+                {/* Cardinal, not an ordinal: Arabic ordinals turn irregular
+                    past ten and buy nothing on a queue position. */}
                 {position === null
-                  ? "You'll be added to the line shortly."
-                  : `You're ${ordinal(position)} in line`}
+                  ? t.queue.waitingSoonAdded
+                  : t.queue.positionInLine(position)}
               </p>
             </Card>
 
             {isOnBreak ? (
               <Card className="px-4 py-3 border-amber/30 bg-amber/8">
                 <p className="text-[13px] text-amber font-medium">
-                  Teacher is on a break
+                  {t.queue.teacherOnBreak}
                 </p>
                 <p className="text-xs text-dim mt-0.5">
-                  The halaqah will resume shortly.
+                  {t.queue.breakWillResume}
                 </p>
               </Card>
             ) : null}
@@ -120,7 +140,10 @@ export function StudentMeeting({
                 </div>
               </div>
               <Button variant="secondary" onClick={onEditRange}>
-                Change range
+                {t.queue.changeRange}
+              </Button>
+              <Button variant="ghost" onClick={onOpenProgress}>
+                {t.queue.progressButton}
               </Button>
             </Card>
           </>

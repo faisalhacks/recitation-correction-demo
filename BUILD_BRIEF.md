@@ -91,7 +91,7 @@ JavaScript.
 | Session type | Group halaqah with a queue; one student recites at a time |
 | Range control | Student and teacher can both change it during a turn |
 | Mark visibility | Student sees marks only after the turn ends |
-| Audio/video | None. A placeholder call strip stands in for the existing meeting |
+| Audio/video | None, still — but the meeting is now drawn in full rather than stood in for. See §19. |
 | Audio recording | None in this version |
 | AI detection | None. The demo only produces the labeled data |
 | Backend | None. localStorage plus BroadcastChannel between tabs |
@@ -161,9 +161,7 @@ JavaScript.
 - Only one student recites at a time; the teacher chooses who is next.
 - Range changes sync instantly and are logged as events. Marks outside a
   new range are kept, never deleted.
-- Both live screens show a slim call strip (avatar, mic icon, running
-  timer) with the tooltip "Placeholder – sits on top of the existing
-  meeting".
+- Both live screens sit inside the meeting itself, not a strip. See §19.
 
 ## 11. Data rules
 
@@ -310,3 +308,49 @@ fails, pick frontend-design from the official Anthropic list in `/plugin`.
 - Teacher's meeting has a Participants panel listing each student with
   surah, ayah range and type. Tapping a student opens the live
   correction view over the meeting.
+
+## 19. Amendment: the meeting is now drawn, not stood in for
+
+Supersedes §4 "Audio/video", the §2a note "Do not recreate the meeting", and
+the call-strip rule in §10.
+
+**What changed.** Screenshots arrived of the client the halaqah actually meets
+in — a Jitsi Meet Android build, used in Arabic. The slim placeholder strip was
+replaced with a faithful clone of that client, in Arabic and right to left:
+prejoin, tile grid, speaker stage with filmstrip, overflow sheet, chat, and
+participant stats. The whole app moved to `lang="ar" dir="rtl"` at the same
+time; the halaqah is conducted in Arabic and the interface now is too.
+
+**What did not change.** There is still no audio, no video, no camera and no
+recording. Nothing was added that captures media.
+
+**The two layers stay visibly separate.** The meeting chrome uses its own
+`--color-jitsi-*` palette — the client's near-black and blue — and shares no
+token with the green correction UI above it. This is deliberate. The feature
+being proposed would sit on top of someone else's meeting, and a single blended
+product would be the wrong picture to hand anyone.
+
+**Cloned controls still obey §12's "no decorative buttons".** The clone is
+complete, because dropping rows would misrepresent the client, but a control
+with nothing to act on in a demo is visibly disabled and says why: car mode,
+low-bandwidth mode, breakout rooms, and audio output all carry a reason.
+The controls that are real are real — your own microphone, chat, the view
+toggle, minimise, participants, and leave.
+
+**Names.** The screenshots show real people in a real circle. Their names are
+no more ours to ship than the other team's were (§2c), so the demo keeps
+placeholder identities: الأستاذ (تجريبي) and الطالب أ/ب/ج/د.
+
+**New event kinds**, all additive, all folded by `lib/state.ts` like the rest:
+
+| Kind | Carries | Note |
+|---|---|---|
+| `chat` | `from`, `fromName`, `text` | The sender's name rides on the event, so the transcript survives them leaving |
+| `mic` | `who`, `muted` | A toggle, a handful per session — safe to log |
+| `leave` | `studentId` | Drops the tile, keeps the turns and the floor time |
+
+**Floor time is derived, never stored.** Speaking time folds out of turn
+boundaries; the turn in progress is added in the component. A running counter
+would have to be written back every second, and every write stringifies the
+whole log and broadcasts it to every open tab. `tests/meeting.test.ts` pins
+this down — those checks fail if a stored counter is ever reintroduced.

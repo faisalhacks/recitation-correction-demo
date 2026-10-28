@@ -11,6 +11,7 @@
 import Link from "next/link";
 import type { ReactNode } from "react";
 
+import { t } from "@/lib/i18n";
 import { QURAN_SOURCE, QURAN_SOURCE_URL } from "@/lib/quran";
 
 export function PhoneFrame({
@@ -43,25 +44,29 @@ export function DemoFooter({ onReset }: { onReset?: () => void }) {
   return (
     <footer className="w-full max-w-[390px] px-5 pb-7 pt-3 sm:pt-0 text-center">
       <p className="text-[11px] text-dim leading-relaxed">
-        Concept demo – not affiliated with any organisation.
+        {t.demo.disclaimer}
       </p>
       <p className="text-[11px] text-faint leading-relaxed mt-1">
-        Quran text from{" "}
-        <a
-          href={QURAN_SOURCE_URL}
-          target="_blank"
-          rel="noreferrer noopener"
-          className="underline underline-offset-2 hover:text-muted"
-        >
-          {QURAN_SOURCE}
-        </a>
+        {t.demo.quranSourcePrefix}{" "}
+        {/* the source name is a Latin proper noun inside an Arabic sentence —
+            isolate it so RTL reordering can't scramble it */}
+        <bdi>
+          <a
+            href={QURAN_SOURCE_URL}
+            target="_blank"
+            rel="noreferrer noopener"
+            className="underline underline-offset-2 hover:text-muted"
+          >
+            {QURAN_SOURCE}
+          </a>
+        </bdi>
       </p>
       <div className="mt-2.5 flex items-center justify-center gap-4">
         <Link
           href="/"
           className="text-[11px] text-muted underline underline-offset-2 hover:text-fg"
         >
-          Start over
+          {t.demo.startOver}
         </Link>
         {onReset ? (
           <button
@@ -69,7 +74,7 @@ export function DemoFooter({ onReset }: { onReset?: () => void }) {
             onClick={onReset}
             className="text-[11px] text-muted underline underline-offset-2 hover:text-fg"
           >
-            Reset demo data
+            {t.demo.resetDemoData}
           </button>
         ) : null}
       </div>
@@ -110,18 +115,20 @@ export function FrameHeader({
           <Link
             href={back.href}
             aria-label={back.label}
-            className="w-8 h-8 -ml-1 grid place-items-center rounded-lg text-fg hover:bg-white/5 text-xl leading-none"
+            className="w-8 h-8 -ms-1 grid place-items-center rounded-lg text-fg hover:bg-white/5 text-xl leading-none"
           >
-            ‹
+            {/* back-navigation chevron is directional — mirrored for RTL */}
+            ›
           </Link>
         ) : (
           <button
             type="button"
             onClick={back.onClick}
             aria-label={back.label}
-            className="w-8 h-8 -ml-1 grid place-items-center rounded-lg text-fg hover:bg-white/5 text-xl leading-none"
+            className="w-8 h-8 -ms-1 grid place-items-center rounded-lg text-fg hover:bg-white/5 text-xl leading-none"
           >
-            ‹
+            {/* back-navigation chevron is directional — mirrored for RTL */}
+            ›
           </button>
         )
       ) : null}

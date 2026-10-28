@@ -20,6 +20,7 @@ import { formatRange, formatRangeShort, getWordText } from "@/lib/quran";
 import { formatDuration } from "@/hooks/useElapsed";
 import { AyahText } from "@/components/quran/AyahText";
 import { Button, Card, Chip, Dot, EmptyState, SectionTitle, StatTile } from "@/components/ui/primitives";
+import { t } from "@/lib/i18n";
 
 export type SummaryMark = {
   surah: number;
@@ -85,7 +86,7 @@ export function Summary({
   return (
     <div className="flex flex-col gap-3 px-4 py-4">
       <Card className="px-4 py-3">
-        <p className="text-[13px] text-dim">{studentName}&apos;s turn</p>
+        <p className="text-[13px] text-dim">{t.summary.turnOf(studentName)}</p>
         <p className="text-[16px] font-medium text-fg mt-0.5">
           {formatRange(range.surah, range.from, range.to)}
         </p>
@@ -96,11 +97,11 @@ export function Summary({
       </Card>
 
       <Card className="px-4 py-3 flex flex-col gap-3">
-        <SectionTitle>Totals</SectionTitle>
+        <SectionTitle>{t.summary.totals}</SectionTitle>
         <div className="grid grid-cols-3 gap-2">
-          <StatTile label="Ayahs" value={ayahCount} />
-          <StatTile label="Words" value={wordCount} />
-          <StatTile label="Marks" value={marks.length} />
+          <StatTile label={t.summary.statAyahs} value={ayahCount} />
+          <StatTile label={t.summary.statWords} value={wordCount} />
+          <StatTile label={t.summary.statMarks} value={marks.length} />
         </div>
         {occurredTypes.length > 0 ? (
           <div className="flex flex-wrap gap-2">
@@ -121,17 +122,17 @@ export function Summary({
       </Card>
 
       <Card className="px-3 py-3">
-        <SectionTitle>Passage</SectionTitle>
+        <SectionTitle>{t.summary.passage}</SectionTitle>
         <div className="mt-2">
           <AyahText surah={range.surah} from={range.from} to={range.to} marks={marks} />
         </div>
       </Card>
 
       <Card className="px-4 py-3 flex flex-col gap-3">
-        <SectionTitle>Marked words</SectionTitle>
+        <SectionTitle>{t.summary.markedWords}</SectionTitle>
         {orderedMarks.length === 0 ? (
-          <EmptyState title="Clean turn">
-            No mistakes were marked this time. Nothing to review.
+          <EmptyState title={t.summary.cleanTurnTitle}>
+            {t.summary.cleanTurnBody}
           </EmptyState>
         ) : (
           <ul className="flex flex-col gap-2">
@@ -154,7 +155,7 @@ export function Summary({
                         {formatRangeShort(mark.surah, mark.ayah, mark.ayah)}
                       </span>
                       {outOfRange ? (
-                        <Chip tone="neutral">Outside current range</Chip>
+                        <Chip tone="neutral">{t.summary.outsideCurrentRange}</Chip>
                       ) : null}
                     </div>
                     <span className="inline-flex items-center gap-1.5 text-[13px] text-fg">
@@ -162,7 +163,13 @@ export function Summary({
                       {MISTAKE_META[mark.type].label}
                     </span>
                     <p className="text-[13px] text-muted leading-snug">
-                      {mark.note ? mark.note : <span className="text-faint italic">No note added</span>}
+                      {mark.note ? (
+                        // Teacher-typed free text — script unknown, so let the
+                        // browser pick its own direction rather than inherit ours.
+                        <span dir="auto">{mark.note}</span>
+                      ) : (
+                        <span className="text-faint italic">{t.summary.noNoteAdded}</span>
+                      )}
                     </p>
                   </div>
                 </Card>
@@ -174,10 +181,10 @@ export function Summary({
 
       <div className="flex flex-col gap-2 pb-2">
         <Button variant="primary" full onClick={onViewProgress}>
-          View progress
+          {t.summary.viewProgress}
         </Button>
         <Button variant="secondary" full onClick={onBackToMeeting}>
-          Back to meeting
+          {t.summary.backToMeeting}
         </Button>
       </div>
     </div>

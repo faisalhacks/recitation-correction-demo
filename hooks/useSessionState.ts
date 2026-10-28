@@ -26,6 +26,7 @@ import {
   type MistakeType,
   type RecitationType,
   LIVE_STUDENT_ID,
+  TEACHER_NAME,
   LIVE_STUDENT_NAME,
   TEACHER_ID,
   appendEvents,
@@ -37,6 +38,7 @@ import {
   subscribeStore,
 } from "@/lib/eventLog";
 import {
+  type ChatMessage,
   type CompletedTurn,
   type DerivedState,
   type Mark,
@@ -79,6 +81,17 @@ export type SessionState = {
   /** The raw log, oldest first — for the audit view. */
   events: DemoEvent[];
 
+  // --- the meeting ---------------------------------------------------------
+  chat: ChatMessage[];
+  /** Microphone state by participant id; missing means muted. */
+  muted: Record<string, boolean>;
+  /** Floor time from finished turns only — the live turn is added by the
+   *  component, so nothing in here has to tick. */
+  speakingSeconds: Record<string, number>;
+  leftIds: string[];
+  /** True when this tab's own microphone is open. */
+  micOpen: boolean;
+
   // --- the live student's own view ----------------------------------------
   myEntry: QueueEntry | null;
   /** 1-based position among waiting students, or null if not waiting. */
@@ -92,7 +105,13 @@ export type SessionState = {
   progressFor: (studentId: string) => ProgressStats;
 
   // --- actions -------------------------------------------------------------
-  joinQueue: (range: AyahRange, recType: RecitationType) => void;
+  /** `displayName` is what the student typed on the join screen; blank falls
+   *  back to the demo's default name. */
+  joinQueue: (
+    range: AyahRange,
+    recType: RecitationType,
+    displayName?: string,
+  ) => void;
   changeRange: (
     studentId: string,
     range: AyahRange,
@@ -103,6 +122,12 @@ export type SessionState = {
   addMark: (mark: NewMark) => void;
   removeMark: (surah: number, ayah: number, wordIndex: number) => void;
   setBreak: (on: boolean) => void;
+  /** Sends a chat message as whoever this tab is. */
+  sendChat: (text: string) => void;
+  /** Opens or mutes this tab's own microphone. */
+  setMic: (open: boolean) => void;
+  /** Leaves the room. The tile goes; the turns and stats stay. */
+  leaveRoom: () => void;
   resetDemo: () => void;
   /** Downloads the whole log as JSON. */
   exportJSON: () => void;
@@ -116,6 +141,10 @@ const EMPTY: DerivedState = {
   liveRange: null,
   liveStartedAt: null,
   completedTurns: [],
+  chat: [],
+  muted: {},
+  speakingSeconds: {},
+  leftIds: [],
 };
 
 /** Stable snapshots for the mounted flag — see `ready` below. */
@@ -124,6 +153,8 @@ const alwaysFalse = () => false;
 const noopSubscribe = () => () => {};
 
 export function useSessionState(role: Role): SessionState {
+  const meId = role === "teacher" ? TEACHER_ID : LIVE_STUDENT_ID;
+
   // The log lives outside React (localStorage plus a BroadcastChannel), which
   // is exactly what useSyncExternalStore is for: it handles the server/client
   // split without an effect that sets state during hydration.
@@ -154,12 +185,12 @@ export function useSessionState(role: Role): SessionState {
   /* --- actions ------------------------------------------------------------ */
 
   const joinQueue = useCallback(
-    (range: AyahRange, recType: RecitationType) => {
+    (range: AyahRange, recType: RecitationType, displayName?: string) => {
       commit([
         makeEvent({
           kind: "queue_join",
           studentId: LIVE_STUDENT_ID,
-          name: LIVE_STUDENT_NAME,
+          name: displayName?.trim() || LIVE_STUDENT_NAME,
           range,
           recType,
         }),
@@ -245,6 +276,35 @@ export function useSessionState(role: Role): SessionState {
     [commit],
   );
 
+  const sendChat = useCallback(
+    (text: string) => {
+      const body = text.trim();
+      if (!body) return;
+      commit([
+        makeEvent({
+          kind: "chat",
+          from: meId,
+          fromName: role === "teacher" ? TEACHER_NAME : LIVE_STUDENT_NAME,
+          text: body,
+        }),
+      ]);
+    },
+    [commit, meId, role],
+  );
+
+  const setMic = useCallback(
+    (open: boolean) => {
+      commit([makeEvent({ kind: "mic", who: meId, muted: !open })]);
+    },
+    [commit, meId],
+  );
+
+  const leaveRoom = useCallback(() => {
+    // Only a student occupies a tile; the teacher leaving would empty the room.
+    if (role !== "student") return;
+    commit([makeEvent({ kind: "leave", studentId: LIVE_STUDENT_ID })]);
+  }, [commit, role]);
+
   const resetDemo = useCallback(() => {
     replaceLog(buildSeedEvents());
   }, []);
@@ -292,7 +352,7 @@ export function useSessionState(role: Role): SessionState {
   return {
     ready,
     role,
-    meId: role === "teacher" ? TEACHER_ID : LIVE_STUDENT_ID,
+    meId,
 
     queue: derived.queue,
     activeStudentId: derived.activeStudentId,
@@ -302,6 +362,12 @@ export function useSessionState(role: Role): SessionState {
     liveStartedAt: derived.liveStartedAt,
     completedTurns: derived.completedTurns,
     events,
+
+    chat: derived.chat,
+    muted: derived.muted,
+    speakingSeconds: derived.speakingSeconds,
+    leftIds: derived.leftIds,
+    micOpen: derived.muted[meId] === false,
 
     myEntry,
     myPosition,
@@ -318,6 +384,9 @@ export function useSessionState(role: Role): SessionState {
     addMark,
     removeMark,
     setBreak,
+    sendChat,
+    setMic,
+    leaveRoom,
     resetDemo,
     exportJSON,
   };

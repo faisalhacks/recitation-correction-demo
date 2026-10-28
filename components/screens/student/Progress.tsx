@@ -9,6 +9,7 @@
 import type { MistakeType } from "@/lib/eventLog";
 import { MISTAKE_META, MISTAKE_TYPES } from "@/lib/eventLog";
 import { Card, Chip, Dot, EmptyState, StatTile } from "@/components/ui/primitives";
+import { t } from "@/lib/i18n";
 
 export type ProgressTurn = {
   turnId: string;
@@ -35,26 +36,24 @@ export type ProgressData = {
 
 function SampleNote({ count }: { count: number }) {
   if (count <= 0) return null;
-  return (
-    <p className="text-[11px] text-dim mt-2">
-      Includes {count} sample {count === 1 ? "turn" : "turns"}.
-    </p>
-  );
+  // sampleNote() already returns the full Arabic sentence with the count
+  // agreed per Arabic's one/dual/few/many rule, not an English-shaped ternary.
+  return <p className="text-[11px] text-dim mt-2">{t.progress.sampleNote(count)}</p>;
 }
 
 function StatGrid({ data }: { data: ProgressData }) {
   return (
     <div className="grid grid-cols-2 gap-2.5">
-      <StatTile label="Turns completed" value={data.turns} />
-      <StatTile label="Ayahs recited" value={data.ayahs} />
-      <StatTile label="Words recited" value={data.words} />
-      <StatTile label="Total mistakes" value={data.mistakes} />
+      <StatTile label={t.progress.statTurnsCompleted} value={data.turns} />
+      <StatTile label={t.progress.statAyahsRecited} value={data.ayahs} />
+      <StatTile label={t.progress.statWordsRecited} value={data.words} />
+      <StatTile label={t.progress.statTotalMistakes} value={data.mistakes} />
       <StatTile
-        label="Avg mistakes / turn"
+        label={t.progress.statAvgMistakesPerTurn}
         value={data.avgMistakesPerTurn.toFixed(1)}
       />
       <StatTile
-        label="Accuracy"
+        label={t.progress.statAccuracy}
         value={`${Math.round(data.accuracyPct)}%`}
       />
     </div>
@@ -85,24 +84,24 @@ export function Progress({
         <button
           type="button"
           onClick={onBack}
-          aria-label="Back"
-          className="text-[22px] text-fg leading-none px-1 -ml-1 rounded-field"
+          aria-label={t.progress.backAria}
+          className="text-[22px] text-fg leading-none px-1 -ms-1 rounded-field"
         >
-          ‹
+          {/* Back-navigation chevron: directional, so it mirrors under RTL. */}
+          ›
         </button>
-        <span className="text-base font-medium">Progress</span>
+        <span className="text-base font-medium">{t.progress.title}</span>
       </div>
 
       <div className="flex-1 overflow-y-auto scroll-area px-4 pb-6 flex flex-col gap-5">
         {/* --- your own turns ------------------------------------------- */}
         <section>
           <h2 className="text-[15px] font-medium text-fg mb-2.5">
-            Your turns
+            {t.progress.yourTurns}
           </h2>
           {myData.turns === 0 ? (
-            <EmptyState title="You haven't recited a turn yet.">
-              Take a turn in the queue and your own numbers will show up
-              here.
+            <EmptyState title={t.progress.noTurnsYetTitle}>
+              {t.progress.noTurnsYetBody}
             </EmptyState>
           ) : (
             <>
@@ -115,7 +114,7 @@ export function Progress({
         {/* --- the whole halaqah ------------------------------------------ */}
         <section>
           <h2 className="text-[15px] font-medium text-fg mb-2.5">
-            Whole halaqah
+            {t.progress.wholeHalaqah}
           </h2>
           <StatGrid data={data} />
           <SampleNote count={data.seededTurns} />
@@ -124,7 +123,7 @@ export function Progress({
         {/* --- most common mistake type ------------------------------------ */}
         <section>
           <h2 className="text-[15px] font-medium text-fg mb-2.5">
-            Most common mistake
+            {t.progress.mostCommonMistake}
           </h2>
           {data.mostCommonType ? (
             <Card className="px-3.5 py-3.5 flex items-center gap-2.5">
@@ -132,12 +131,12 @@ export function Progress({
               <span className="text-[15px] text-fg font-medium">
                 {MISTAKE_META[data.mostCommonType].label}
               </span>
-              <span className="text-[13px] text-dim ml-auto tabular-nums">
-                {data.byType[data.mostCommonType]} marks
+              <span className="text-[13px] text-dim ms-auto tabular-nums">
+                {t.progress.marksCount(data.byType[data.mostCommonType])}
               </span>
             </Card>
           ) : (
-            <EmptyState title="No mistakes recorded yet." />
+            <EmptyState title={t.progress.noMistakesRecordedYet} />
           )}
           <SampleNote count={data.seededTurns} />
         </section>
@@ -145,10 +144,10 @@ export function Progress({
         {/* --- mistakes per turn, and the per-turn list -------------------- */}
         <section>
           <h2 className="text-[15px] font-medium text-fg mb-2.5">
-            Mistakes per turn
+            {t.progress.mistakesPerTurn}
           </h2>
           {data.perTurn.length === 0 ? (
-            <EmptyState title="No turns completed yet in this halaqah." />
+            <EmptyState title={t.progress.noTurnsCompletedYet} />
           ) : (
             <ul className="flex flex-col gap-2.5">
               {data.perTurn.map((turn) => (
@@ -158,17 +157,18 @@ export function Progress({
                       <span className="text-[13px] text-fg font-medium">
                         {turn.label}
                       </span>
-                      <span className="text-[12px] text-dim truncate">
+                      {/* Student-entered name — isolate it so Arabic around it
+                          can't reorder a script we don't control. */}
+                      <bdi className="text-[12px] text-dim truncate">
                         {turn.studentName}
-                      </span>
+                      </bdi>
                       {turn.seeded ? (
                         <Chip tone="amber" className="shrink-0">
-                          Sample
+                          {t.progress.sampleChip}
                         </Chip>
                       ) : null}
-                      <span className="ml-auto text-[12px] text-dim tabular-nums shrink-0">
-                        {turn.mistakes}{" "}
-                        {turn.mistakes === 1 ? "mistake" : "mistakes"}
+                      <span className="ms-auto text-[12px] text-dim tabular-nums shrink-0">
+                        {t.progress.mistakesCount(turn.mistakes)}
                       </span>
                     </div>
                     <div className="h-2 bg-field rounded-full overflow-hidden">
@@ -190,10 +190,10 @@ export function Progress({
         {/* --- breakdown by mistake type ------------------------------------ */}
         <section>
           <h2 className="text-[15px] font-medium text-fg mb-2.5">
-            Breakdown by mistake type
+            {t.progress.breakdownByType}
           </h2>
           {typeEntries.length === 0 ? (
-            <EmptyState title="No mistakes have been marked in these turns yet." />
+            <EmptyState title={t.progress.noMistakesMarkedYet} />
           ) : (
             <ul className="flex flex-col gap-2">
               {typeEntries.map(({ type, count }) => (
@@ -211,7 +211,7 @@ export function Progress({
                       }}
                     />
                   </div>
-                  <span className="text-[12px] text-dim tabular-nums w-6 text-right shrink-0">
+                  <span className="text-[12px] text-dim tabular-nums w-6 text-end shrink-0">
                     {count}
                   </span>
                 </li>
