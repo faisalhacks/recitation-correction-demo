@@ -19,6 +19,7 @@ import {
   isPartiallyCached,
   surahList,
 } from "@/lib/quran";
+import { t } from "@/lib/i18n";
 import { AyahText } from "@/components/quran/AyahText";
 import { Button, Label, Segmented, Stepper } from "@/components/ui/primitives";
 
@@ -76,7 +77,7 @@ export function RangePicker({
   if (!meta) {
     return (
       <div className="px-4 py-10 text-center text-sm text-dim">
-        No cached surahs available.
+        {t.range.noCachedSurahs}
       </div>
     );
   }
@@ -88,25 +89,28 @@ export function RangePicker({
           <button
             type="button"
             onClick={onCancel}
-            aria-label="Cancel"
-            className="text-[22px] text-fg leading-none px-1 -ml-1 rounded-field"
+            aria-label={t.range.cancelAria}
+            className="text-[22px] text-fg leading-none px-1 -ms-1 rounded-field"
           >
-            ‹
+            {/* back-navigation chevron is directional — mirrored for RTL */}
+            ›
           </button>
         ) : null}
-        <span className="text-base font-medium">Before you join</span>
+        <span className="text-base font-medium">{t.range.title}</span>
       </div>
 
       <div className="flex-1 overflow-y-auto scroll-area px-4 pb-4">
-        <div className="text-xs font-medium text-green-bright tracking-wide pb-2.5">
-          WHAT ARE YOU RECITING?
+        {/* Arabic script joins its letters — tracking-wide would fracture the
+            word into disconnected glyphs, so emphasis comes from weight/colour only */}
+        <div className="text-xs font-medium text-green-bright pb-2.5">
+          {t.range.sectionWhat}
         </div>
 
-        <Label>Surah</Label>
+        <Label>{t.range.surahLabel}</Label>
         <select
           value={range.surah}
           onChange={(e) => changeSurah(Number(e.target.value))}
-          aria-label="Surah"
+          aria-label={t.range.surahLabel}
           className="w-full h-[46px] bg-field border border-line-strong rounded-field px-3.5 text-[15px] text-fg mb-3.5"
         >
           {surahs.map((s) => (
@@ -118,55 +122,52 @@ export function RangePicker({
 
         <div className="flex gap-3 mb-4">
           <div className="flex-1">
-            <Label>From ayah</Label>
+            <Label>{t.range.fromAyahLabel}</Label>
             <Stepper
               value={range.from}
               min={meta.cachedFrom}
               max={meta.cachedTo}
               onChange={changeFrom}
-              ariaLabel="From ayah"
+              ariaLabel={t.range.fromAyahLabel}
             />
           </div>
           <div className="flex-1">
-            <Label>To ayah</Label>
+            <Label>{t.range.toAyahLabel}</Label>
             <Stepper
               value={range.to}
               min={meta.cachedFrom}
               max={meta.cachedTo}
               onChange={changeTo}
-              ariaLabel="To ayah"
+              ariaLabel={t.range.toAyahLabel}
             />
           </div>
         </div>
 
         {partial ? (
           <p className="text-xs text-dim mb-4 -mt-1.5">
-            Only ayahs {meta.cachedFrom}–{meta.cachedTo} of {meta.ayahCount} are
-            cached for {meta.nameSimple} in this demo.
+            {t.range.partialCache(meta.cachedFrom, meta.cachedTo, meta.ayahCount, meta.nameSimple)}
           </p>
         ) : null}
 
         <div className="bg-surface-2 border border-line rounded-card px-3.5 py-3.5 mb-4">
           <AyahText surah={range.surah} from={range.from} to={range.to} marks={[]} />
           <div className="text-xs text-dim mt-2 flex items-center gap-1.5">
-            Starts at {range.surah}:{range.from} · {ayahCount}{" "}
-            {ayahCount === 1 ? "ayah" : "ayahs"} selected
+            {t.range.startsAt(range.surah, range.from, ayahCount)}
           </div>
         </div>
 
-        <Label>Type</Label>
+        <Label>{t.range.typeLabel}</Label>
         <div className="mb-4">
           <Segmented
             options={typeOptions}
             value={recType}
             onChange={setRecType}
-            ariaLabel="Recitation type"
+            ariaLabel={t.range.typeAria}
           />
         </div>
 
         <p className="text-xs text-dim mb-4 leading-relaxed">
-          Your teacher sees this range the moment you join, and marks mistakes
-          on exactly these ayahs.
+          {t.range.teacherSeesNote}
         </p>
       </div>
 

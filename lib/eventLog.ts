@@ -14,13 +14,13 @@
 
 export const SESSION_ID = "sess_01";
 export const TEACHER_ID = "ustadh_demo";
-export const TEACHER_NAME = "Ustadh Demo";
+export const TEACHER_NAME = "الأستاذ (تجريبي)";
 export const STORAGE_KEY = "iqra_demo_log_v1";
 export const CHANNEL_NAME = "iqra-demo";
 
 /** The live student, i.e. whoever has the Student tab open. */
 export const LIVE_STUDENT_ID = "student_a";
-export const LIVE_STUDENT_NAME = "You (Student A)";
+export const LIVE_STUDENT_NAME = "أنت (الطالب أ)";
 
 export type MistakeType =
   | "tajwid"
@@ -45,12 +45,15 @@ export const MISTAKE_META: Record<
   MistakeType,
   { label: string; color: string }
 > = {
-  tajwid: { label: "Tajwid", color: "var(--color-m-tajwid)" },
-  makhraj: { label: "Makhraj", color: "var(--color-m-makhraj)" },
-  harakah: { label: "Harakah", color: "var(--color-m-harakah)" },
-  missed: { label: "Missed", color: "var(--color-m-missed)" },
-  extra: { label: "Extra", color: "var(--color-m-extra)" },
-  hesitation: { label: "Hesitation", color: "var(--color-m-hesitation)" },
+  // Single words: these render in a tight legend row and an 80px list label.
+  // The classical split behind them is لحن جلي (changes the words — حركة, سقط,
+  // زيادة) versus لحن خفي (a rule slipped, the words intact — تجويد, مخرج).
+  tajwid: { label: "تجويد", color: "var(--color-m-tajwid)" },
+  makhraj: { label: "مخرج", color: "var(--color-m-makhraj)" },
+  harakah: { label: "حركة", color: "var(--color-m-harakah)" },
+  missed: { label: "سقط", color: "var(--color-m-missed)" },
+  extra: { label: "زيادة", color: "var(--color-m-extra)" },
+  hesitation: { label: "تعثر", color: "var(--color-m-hesitation)" },
 };
 
 export type RecitationType = "sabaq" | "sabqi" | "manzil";
@@ -59,9 +62,9 @@ export const RECITATION_META: Record<
   RecitationType,
   { label: string; hint: string }
 > = {
-  sabaq: { label: "Sabaq", hint: "New lesson" },
-  sabqi: { label: "Sabqi", hint: "Recent" },
-  manzil: { label: "Manzil", hint: "Old revision" },
+  sabaq: { label: "سبق", hint: "الدرس الجديد" },
+  sabqi: { label: "سبقي", hint: "المراجعة القريبة" },
+  manzil: { label: "منزل", hint: "المراجعة البعيدة" },
 };
 
 export type AyahRange = {
@@ -70,13 +73,18 @@ export type AyahRange = {
   to: number;
 };
 
-type EventBase = {
+type Envelope = {
   id: string;
   sessionId: string;
-  studentId: string;
   teacherId: string;
   /** ISO 8601. */
   timestamp: string;
+};
+
+/** Most events are about one student. Chat and microphone events are not, and
+ *  carry the envelope alone rather than inventing a studentId to satisfy it. */
+type EventBase = Envelope & {
+  studentId: string;
 };
 
 /** Field names follow BUILD_BRIEF.md §11 exactly; `kind` is the discriminator. */
@@ -112,13 +120,37 @@ export type BreakEvent = EventBase & {
   on: boolean;
 };
 
+/** A message in the meeting chat. The sender is named on the event itself, so
+ *  the transcript still reads correctly after that person has left the room. */
+export type ChatEvent = Envelope & {
+  kind: "chat";
+  from: string;
+  fromName: string;
+  text: string;
+};
+
+/** A microphone toggle. Low frequency by nature — a handful in a session — so
+ *  it belongs in the log. Anything that ticks does not; see useSpeakingTime. */
+export type MicEvent = Envelope & {
+  kind: "mic";
+  who: string;
+  muted: boolean;
+};
+
+/** Someone leaves the room. Their tile goes; their completed turns and their
+ *  speaking time stay, because the stats list keeps people who have left. */
+export type LeaveEvent = EventBase & { kind: "leave" };
+
 export type DemoEvent =
   | MarkEvent
   | QueueJoinEvent
   | RangeChangeEvent
   | TurnStartEvent
   | TurnFinishEvent
-  | BreakEvent;
+  | BreakEvent
+  | ChatEvent
+  | MicEvent
+  | LeaveEvent;
 
 /* -------------------------------------------------------------------------- */
 /* ids                                                                         */
@@ -157,7 +189,10 @@ export type EventDraft =
   | DraftOf<RangeChangeEvent>
   | DraftOf<TurnStartEvent>
   | DraftOf<TurnFinishEvent>
-  | DraftOf<BreakEvent>;
+  | DraftOf<BreakEvent>
+  | DraftOf<ChatEvent>
+  | DraftOf<MicEvent>
+  | DraftOf<LeaveEvent>;
 
 /** Stamp a draft with the envelope fields, keeping its specific event type. */
 export function makeEvent<D extends EventDraft>(

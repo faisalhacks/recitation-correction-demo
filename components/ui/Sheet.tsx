@@ -9,6 +9,8 @@
 
 import { useEffect, useRef, type ReactNode } from "react";
 
+import { t } from "@/lib/i18n";
+
 export function Sheet({
   open,
   onClose,
@@ -42,7 +44,7 @@ export function Sheet({
     <div className="absolute inset-0 z-30 flex flex-col justify-end">
       <button
         type="button"
-        aria-label="Close"
+        aria-label={t.common.dismiss}
         onClick={onClose}
         className="absolute inset-0 bg-black/55"
       />
@@ -62,7 +64,7 @@ export function Sheet({
           <button
             type="button"
             onClick={onClose}
-            aria-label="Close"
+            aria-label={t.common.close}
             className="w-8 h-8 grid place-items-center rounded-lg text-muted hover:text-fg hover:bg-white/5 text-xl leading-none"
           >
             ×

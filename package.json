@@ -8,7 +8,7 @@
     "start": "next start",
     "lint": "eslint",
     "typecheck": "tsc --noEmit",
-    "test": "tsx tests/derive.test.ts && tsx tests/export.test.ts"
+    "test": "tsx tests/derive.test.ts && tsx tests/meeting.test.ts && tsx tests/export.test.ts"
   },
   "dependencies": {
     "next": "16.4.0",

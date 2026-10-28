@@ -27,9 +27,9 @@ import {
 import { getWords } from "./quran";
 
 export const SEED_STUDENTS = {
-  b: { id: "student_b", name: "Student B" },
-  c: { id: "student_c", name: "Student C" },
-  d: { id: "student_d", name: "Student D" },
+  b: { id: "student_b", name: "الطالب ب" },
+  c: { id: "student_c", name: "الطالب ج" },
+  d: { id: "student_d", name: "الطالب د" },
 } as const;
 
 const MINUTE = 60_000;

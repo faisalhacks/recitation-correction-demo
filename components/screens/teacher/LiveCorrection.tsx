@@ -18,6 +18,7 @@ import { AyahText, MistakeLegend } from "@/components/quran/AyahText";
 import { Avatar, Button, Card, Chip, Dot } from "@/components/ui/primitives";
 import { Sheet } from "@/components/ui/Sheet";
 import { formatDuration, useElapsed } from "@/hooks/useElapsed";
+import { t } from "@/lib/i18n";
 
 export type LiveMark = {
   surah: number;
@@ -65,7 +66,7 @@ export function LiveCorrection({
   );
   const [note, setNote] = useState("");
 
-  const surahName = getSurahMeta(range.surah)?.nameSimple ?? `Surah ${range.surah}`;
+  const surahName = getSurahMeta(range.surah)?.nameSimple ?? t.correction.surahFallback(range.surah);
 
   // Marks outside the current range are kept, never deleted (BUILD_BRIEF.md
   // §10) — but AyahText only renders words inside `range`, so we surface a
@@ -124,15 +125,16 @@ export function LiveCorrection({
         <button
           type="button"
           onClick={onClose}
-          aria-label="Close correction view"
-          className="text-[22px] text-fg leading-none px-1 -ml-1 rounded-field"
+          aria-label={t.correction.closeAria}
+          className="text-[22px] text-fg leading-none px-1 -ms-1 rounded-field"
         >
-          ‹
+          {/* This is a chevron glyph, not an "X" — it is directional, so it mirrors under RTL. */}
+          ›
         </button>
-        <span className="text-base font-medium flex-1">Correction</span>
+        <span className="text-base font-medium flex-1">{t.correction.title}</span>
         <span
           role="status"
-          aria-label={`Turn elapsed time ${formatDuration(elapsed)}`}
+          aria-label={t.correction.elapsedAria(formatDuration(elapsed))}
           className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-medium tabular-nums ${
             startedAt
               ? "bg-green-bright/12 text-green-bright"
@@ -145,36 +147,39 @@ export function LiveCorrection({
               startedAt ? "bg-green-bright animate-pulse" : "bg-faint"
             }`}
           />
-          {formatDuration(elapsed)}
+          {/* A clock reading is a Latin/numeric run; isolate it from the Arabic around it. */}
+          <span dir="ltr">{formatDuration(elapsed)}</span>
         </span>
       </div>
 
       <Card className="mx-4 px-3 py-3 flex items-center gap-3 shrink-0">
         <Avatar name={studentName} />
         <div className="flex-1 min-w-0">
-          <p className="text-sm font-medium text-fg truncate">{studentName}</p>
-          <p className="text-xs text-green-bright">Reciting now</p>
+          {/* Student-entered name — isolate it so Arabic around it can't reorder a script we don't control. */}
+          <p className="text-sm font-medium text-fg truncate">
+            <bdi>{studentName}</bdi>
+          </p>
+          <p className="text-xs text-green-bright">{t.correction.recitingNow}</p>
         </div>
       </Card>
 
       <div className="px-4 pt-3.5 flex flex-wrap items-center gap-2 shrink-0">
         <span className="text-sm font-medium text-fg">{surahName}</span>
         <Chip tone="green">
-          {formatRangeShort(range.surah, range.from, range.to)}
+          <span dir="ltr">{formatRangeShort(range.surah, range.from, range.to)}</span>
         </Chip>
         <Chip>{RECITATION_META[recType].label}</Chip>
       </div>
       <div className="px-4 pt-1 pb-0.5 text-xs text-muted shrink-0">
-        {marks.length} marked
+        {t.correction.markedCount(marks.length)}
       </div>
       {outsideCount > 0 ? (
         <p className="px-4 pb-1 text-xs text-dim shrink-0">
-          {outsideCount} more {outsideCount === 1 ? "mark" : "marks"} fall
-          outside the current range.
+          {t.correction.outsideRangeNote(outsideCount)}
         </p>
       ) : null}
       <p className="px-4 pb-2 text-xs text-dim shrink-0">
-        Tap a word to mark a mistake
+        {t.correction.tapWordHint}
       </p>
 
       <div className="flex-1 overflow-y-auto scroll-area px-4 pb-4 min-h-0">
@@ -193,14 +198,14 @@ export function LiveCorrection({
 
       <div className="flex gap-2.5 px-4 pb-4 pt-1 shrink-0">
         <Button variant="secondary" className="flex-1" onClick={onChangeRange}>
-          Change range
+          {t.correction.changeRange}
         </Button>
         <Button className="flex-1" onClick={onFinishTurn}>
-          Finish turn
+          {t.correction.finishTurn}
         </Button>
       </div>
 
-      <Sheet open={tapped !== null} onClose={closeSheet} title="Mark mistake">
+      <Sheet open={tapped !== null} onClose={closeSheet} title={t.correction.markMistakeSheetTitle}>
         {tapped ? (
           <>
             <div
@@ -214,7 +219,7 @@ export function LiveCorrection({
 
             <div
               role="radiogroup"
-              aria-label="Mistake type"
+              aria-label={t.correction.mistakeTypeAria}
               className="flex flex-wrap gap-2 mb-3.5"
             >
               {MISTAKE_TYPES.map((t) => {
@@ -248,23 +253,25 @@ export function LiveCorrection({
             </div>
 
             <label className="block mb-3.5">
-              <span className="sr-only">Note (optional)</span>
+              <span className="sr-only">{t.correction.noteSrLabel}</span>
               <input
                 type="text"
                 value={note}
                 onChange={(e) => setNote(e.target.value)}
-                placeholder="Add a note (optional)"
+                placeholder={t.correction.notePlaceholder}
+                // User-typed text of unknown script — let the browser pick direction.
+                dir="auto"
                 className="w-full h-10 bg-field border border-line-strong rounded-field px-3 text-[13px] text-fg"
               />
             </label>
 
             <div className="flex gap-2.5 items-center">
               <Button full onClick={handleSave}>
-                Save mark
+                {t.correction.saveMark}
               </Button>
               {existingMark ? (
                 <Button variant="danger" onClick={handleRemove}>
-                  Remove
+                  {t.correction.remove}
                 </Button>
               ) : null}
             </div>

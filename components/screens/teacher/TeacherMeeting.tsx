@@ -3,18 +3,19 @@
 /**
  * Teacher's view inside the simulated meeting (BUILD_BRIEF.md §18, §9.8).
  *
- * The Participants panel lives behind a Sheet reached from the control bar,
- * alongside the audit-log entry point. The meeting body itself stays a short
- * summary of who is reciting (or that nobody is), plus the break toggle —
- * the one piece of room state whose consequence the student tabs show too,
- * so it needs to read just as plainly here.
+ * The Participants panel lives behind a Sheet reached from a button in the
+ * panel body, alongside the audit-log entry point. The meeting body itself
+ * stays a short summary of who is reciting (or that nobody is), plus the
+ * break toggle — the one piece of room state whose consequence the student
+ * tabs show too, so it needs to read just as plainly here.
  */
 
 import { useState } from "react";
 
+import type { ChatMessage } from "@/lib/state";
 import type { AyahRange, RecitationType } from "@/lib/eventLog";
-import type { Participant } from "@/components/shell/MeetingShell";
-import { MeetingShell } from "@/components/shell/MeetingShell";
+import type { MeetingPerson } from "@/components/meeting/chrome";
+import { MeetingShell } from "@/components/meeting/MeetingShell";
 import { Sheet } from "@/components/ui/Sheet";
 import {
   Avatar,
@@ -24,6 +25,7 @@ import {
   EmptyState,
 } from "@/components/ui/primitives";
 import { RECITATION_META } from "@/lib/eventLog";
+import { t } from "@/lib/i18n";
 import { formatRange } from "@/lib/quran";
 
 export type QueueRow = {
@@ -35,9 +37,9 @@ export type QueueRow = {
 };
 
 const STATUS_LABEL: Record<QueueRow["status"], string> = {
-  waiting: "Waiting",
-  reciting: "Reciting",
-  done: "Done",
+  waiting: t.queue.statusWaiting,
+  reciting: t.queue.statusReciting,
+  done: t.queue.statusDone,
 };
 
 function statusChip(status: QueueRow["status"]) {
@@ -59,11 +61,12 @@ function QueueRowButton({
   const isActive = activeStudentId === row.studentId;
   const blocked = activeStudentId !== null && !isActive;
 
-  let label = row.status === "done" ? "Start another turn" : "Start turn";
-  if (isActive) label = "Open correction view";
+  let label: string =
+    row.status === "done" ? t.queue.startAnotherTurn : t.queue.startTurn;
+  if (isActive) label = t.queue.openCorrectionView;
 
   const disabledReason = blocked
-    ? `Finish ${activeName ?? "the current student"}'s turn first`
+    ? t.queue.finishOtherFirst(activeName ?? t.queue.currentStudentFallback)
     : undefined;
 
   return (
@@ -76,7 +79,7 @@ function QueueRowButton({
     >
       <span className="flex items-center gap-2.5 min-w-0">
         <Avatar name={row.name} size={32} />
-        <span className="flex flex-col items-start min-w-0 text-left">
+        <span className="flex flex-col items-start min-w-0 text-start">
           <span className="text-[14px] font-medium text-fg">{row.name}</span>
           <span className="text-[11px] text-dim truncate">
             {formatRange(row.range.surah, row.range.from, row.range.to)} ·{" "}
@@ -96,6 +99,13 @@ export function TeacherMeeting({
   participants,
   speakerId,
   startedAt,
+  meId,
+  micOpen,
+  onToggleMic,
+  chat,
+  onSendChat,
+  leftIds,
+  onLeave,
   queue,
   activeStudentId,
   isOnBreak,
@@ -103,9 +113,16 @@ export function TeacherMeeting({
   onToggleBreak,
   onOpenAudit,
 }: {
-  participants: Participant[];
+  participants: MeetingPerson[];
   speakerId: string | null;
   startedAt: string | null;
+  meId: string;
+  micOpen: boolean;
+  onToggleMic: () => void;
+  chat: readonly ChatMessage[];
+  onSendChat: (text: string) => void;
+  leftIds: readonly string[];
+  onLeave: () => void;
   queue: QueueRow[];
   activeStudentId: string | null;
   isOnBreak: boolean;
@@ -117,32 +134,28 @@ export function TeacherMeeting({
 
   const activeRow = queue.find((r) => r.studentId === activeStudentId);
 
-  const controls = (
-    <>
-      <Button variant="secondary" onClick={() => setPanelOpen(true)}>
-        Participants ({queue.length})
-      </Button>
-      <Button variant="secondary" onClick={onOpenAudit}>
-        Audit log
-      </Button>
-    </>
-  );
-
   return (
     <MeetingShell
-      participants={participants}
+      people={participants}
       speakerId={speakerId}
       startedAt={startedAt}
-      controls={controls}
+      meId={meId}
+      micOpen={micOpen}
+      onToggleMic={onToggleMic}
+      chat={chat}
+      onSendChat={onSendChat}
+      leftIds={leftIds}
+      onLeave={onLeave}
     >
       <div className="px-4 py-4 flex flex-col gap-3">
         <Card className="px-4 py-3">
           {activeRow ? (
             <>
               <p className="text-[15px] font-medium text-green-bright">
-                {activeRow.name} is reciting
+                {t.queue.recitingNowTitle}
               </p>
               <p className="text-xs text-dim mt-0.5">
+                {activeRow.name} ·{" "}
                 {formatRange(
                   activeRow.range.surah,
                   activeRow.range.from,
@@ -154,10 +167,10 @@ export function TeacherMeeting({
           ) : (
             <>
               <p className="text-[15px] font-medium text-fg">
-                Nobody is reciting yet
+                {t.queue.nobodyReciting}
               </p>
               <p className="text-xs text-dim mt-0.5">
-                Open Participants to start a student&apos;s turn.
+                {t.queue.openParticipantsHint}
               </p>
             </>
           )}
@@ -174,19 +187,28 @@ export function TeacherMeeting({
                 isOnBreak ? "text-amber" : "text-fg"
               }`}
             >
-              {isOnBreak ? "Teacher is on a break" : "Break is off"}
+              {isOnBreak ? t.queue.teacherOnBreak : t.queue.breakOffTitle}
             </p>
             <p className="text-xs text-dim mt-0.5">
-              {isOnBreak
-                ? "Students waiting in the queue see this too."
-                : "Students can be called up as usual."}
+              {isOnBreak ? t.queue.breakOnHint : t.queue.breakOffHint}
             </p>
           </div>
           <Button
             variant={isOnBreak ? "primary" : "secondary"}
             onClick={() => onToggleBreak(!isOnBreak)}
           >
-            {isOnBreak ? "End break" : "Take a break"}
+            {isOnBreak ? t.queue.endBreak : t.queue.takeBreak}
+          </Button>
+        </Card>
+
+        {/* These two used to live in the shell's `controls` slot; the new
+            shell has no such slot, so they are ordinary buttons here. */}
+        <Card className="px-4 py-3 flex flex-col gap-2">
+          <Button variant="secondary" onClick={() => setPanelOpen(true)}>
+            {t.meeting.participants} ({queue.length})
+          </Button>
+          <Button variant="secondary" onClick={onOpenAudit}>
+            {t.queue.auditLogButton}
           </Button>
         </Card>
       </div>
@@ -194,11 +216,11 @@ export function TeacherMeeting({
       <Sheet
         open={panelOpen}
         onClose={() => setPanelOpen(false)}
-        title={`Participants (${queue.length})`}
+        title={`${t.meeting.participants} (${queue.length})`}
       >
         {queue.length === 0 ? (
-          <EmptyState title="No students in the queue">
-            Students will appear here once they join the halaqah.
+          <EmptyState title={t.queue.noStudentsInQueue}>
+            {t.queue.studentsWillAppear}
           </EmptyState>
         ) : (
           <ul className="flex flex-col gap-2">

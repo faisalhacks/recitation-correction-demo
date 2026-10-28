@@ -56,6 +56,14 @@ export type CompletedTurn = {
   seeded: boolean;
 };
 
+export type ChatMessage = {
+  id: string;
+  from: string;
+  fromName: string;
+  text: string;
+  at: string;
+};
+
 export type DerivedState = {
   queue: QueueEntry[];
   activeStudentId: string | null;
@@ -66,6 +74,22 @@ export type DerivedState = {
   liveRange: AyahRange | null;
   liveStartedAt: string | null;
   completedTurns: CompletedTurn[];
+  /** The meeting chat, oldest first. */
+  chat: ChatMessage[];
+  /** Microphone state per participant. Missing means muted: everyone joins
+   *  muted, exactly as the real client does. */
+  muted: Record<string, boolean>;
+  /**
+   * Seconds each participant has held the floor across *finished* turns.
+   *
+   * The turn in progress is deliberately not included. A running total would
+   * have to be written back once a second, and every write here stringifies the
+   * whole log and broadcasts it to every open tab. The live remainder is added
+   * in the component instead, from `liveStartedAt`.
+   */
+  speakingSeconds: Record<string, number>;
+  /** Who has left. Their tiles are gone; their stats are not. */
+  leftIds: string[];
 };
 
 const markKey = (surah: number, ayah: number, wordIndex: number): string =>
@@ -91,6 +115,9 @@ export function deriveState(events: readonly DemoEvent[]): DerivedState {
   const completedTurns: CompletedTurn[] = [];
   let open: OpenTurn | null = null;
   let isOnBreak = false;
+  const chat: ChatMessage[] = [];
+  const muted: Record<string, boolean> = {};
+  const left = new Set<string>();
 
   const closeTurn = (finishedAt: string) => {
     if (!open) return;
@@ -182,12 +209,48 @@ export function deriveState(events: readonly DemoEvent[]): DerivedState {
         isOnBreak = e.on;
         break;
       }
+
+      case "chat": {
+        chat.push({
+          id: e.id,
+          from: e.from,
+          fromName: e.fromName,
+          text: e.text,
+          at: e.timestamp,
+        });
+        break;
+      }
+
+      case "mic": {
+        muted[e.who] = e.muted;
+        break;
+      }
+
+      case "leave": {
+        // Close first, then drop: the turn needs the entry to record whose it
+        // was and over which ayahs.
+        if (open && open.studentId === e.studentId) closeTurn(e.timestamp);
+        entries.delete(e.studentId);
+        left.add(e.studentId);
+        break;
+      }
     }
   }
 
   const queue = [...entries.values()].sort((a, b) =>
     a.joinedAt < b.joinedAt ? -1 : a.joinedAt > b.joinedAt ? 1 : 0,
   );
+
+  // Floor time is folded out of the same turn boundaries the summary uses, so
+  // the stats screen can never disagree with the turn history.
+  const speakingSeconds: Record<string, number> = {};
+  for (const t of completedTurns) {
+    const ms = Date.parse(t.finishedAt) - Date.parse(t.startedAt);
+    if (Number.isFinite(ms) && ms > 0) {
+      speakingSeconds[t.studentId] =
+        (speakingSeconds[t.studentId] ?? 0) + Math.round(ms / 1000);
+    }
+  }
 
   const activeStudentId = open ? (open as OpenTurn).studentId : null;
   const liveEntry = activeStudentId ? entries.get(activeStudentId) : undefined;
@@ -200,6 +263,10 @@ export function deriveState(events: readonly DemoEvent[]): DerivedState {
     liveRange: liveEntry?.range ?? null,
     liveStartedAt: open ? (open as OpenTurn).startedAt : null,
     completedTurns,
+    chat,
+    muted,
+    speakingSeconds,
+    leftIds: [...left],
   };
 }
 
